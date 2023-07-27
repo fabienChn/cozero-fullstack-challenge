@@ -50,4 +50,8 @@ export class ProjectsService {
   async remove(id: number) {
     return this.projectsRepository.softDelete(id);
   }
+
+  async restore(id: number) {
+    return this.projectsRepository.restore(id);
+  }
 }

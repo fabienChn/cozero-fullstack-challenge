@@ -3,6 +3,17 @@ import { generateAccessToken, initTestServer } from '../test-setup';
 import { INestApplication } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 
+const projectDataFaker = (data: any) => ({
+  listing: [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
+    'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
+  ],
+  owner: 'John Doe',
+  co2EstimateReduction: [100, 200],
+  ...data,
+});
+
 describe('ProjectsController', () => {
   let app: INestApplication;
   let projectRepository;
@@ -19,39 +30,18 @@ describe('ProjectsController', () => {
     await projectRepository.clear();
 
     await projectRepository.save([
-      {
+      projectDataFaker({
         name: 'Project 1',
         description: 'The description',
-        listing: [
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-        ],
-        owner: 'John Doe',
-        co2EstimateReduction: [100, 200],
-      },
-      {
+      }),
+      projectDataFaker({
         name: 'Project 2',
         description: 'The description',
-        listing: [
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-        ],
-        owner: 'John Doe',
-        co2EstimateReduction: [100, 200],
-      },
-      {
+      }),
+      projectDataFaker({
         name: 'Project 3',
         description: 'A different description',
-        listing: [
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-          'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-        ],
-        owner: 'John Doe',
-        co2EstimateReduction: [100, 200],
-      },
+      }),
     ]);
   });
 
@@ -104,17 +94,12 @@ describe('ProjectsController', () => {
       return supertest(app.getHttpServer())
         .post('/projects/create')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          name: 'Project 4',
-          description: 'A different description',
-          listing: [
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-            'Donec auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget aliquam nunc nisl eget nisl.',
-          ],
-          owner: 'John Doe',
-          co2EstimateReduction: [100, 200],
-        })
+        .send(
+          projectDataFaker({
+            name: 'Project 4',
+            description: 'A different description',
+          }),
+        )
         .expect(201);
     });
 
@@ -154,6 +139,28 @@ describe('ProjectsController', () => {
       });
 
       expect(deletedProject.id).toBe(firstProject.id);
+    });
+  });
+
+  describe('restore', () => {
+    it('restores the soft deleted project', async () => {
+      const softdeletedProject = await projectRepository.save(
+        projectDataFaker({
+          name: 'Project 5',
+          description: 'A different description',
+          deletedAt: Date.now().toString(),
+        }),
+      );
+
+      await supertest(app.getHttpServer())
+        .patch(`/projects/${softdeletedProject.id}/restore`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      const restoredProject = await projectRepository.findOne({
+        where: { id: softdeletedProject.id },
+      });
+
+      expect(restoredProject.id).toBe(softdeletedProject.id);
     });
   });
 });
