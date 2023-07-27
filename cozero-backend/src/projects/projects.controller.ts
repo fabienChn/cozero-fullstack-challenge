@@ -6,25 +6,30 @@ import {
   Param,
   Delete,
   Put,
+  HttpCode,
+  HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { SkipAuth } from 'src/decorators/skipAuth.decorator';
+import { SkipAuth } from '../decorators/skipAuth.decorator';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post('create')
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() project: CreateProjectDto) {
     return this.projectsService.create(project);
   }
 
   @SkipAuth()
   @Get()
-  findAll() {
-    return this.projectsService.findAll();
+  @HttpCode(HttpStatus.OK)
+  findAll(@Query('searchQuery') searchQuery?: string) {
+    return this.projectsService.findAll(searchQuery);
   }
 
   @SkipAuth()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
@@ -16,8 +16,27 @@ export class ProjectsService {
     return await this.projectsRepository.save(createProjectDto);
   }
 
-  async findAll(): Promise<Project[]> {
-    return this.projectsRepository.find();
+  async findAll(searchQuery?: string): Promise<Project[]> {
+    if (!searchQuery) {
+      return this.projectsRepository.find();
+    }
+
+    const spacelessSearch = searchQuery.replace(' ', '');
+
+    return this.projectsRepository.find({
+      where: [
+        {
+          name: Raw(
+            (alias) => `REPLACE(${alias}, " ", "") LIKE "%${spacelessSearch}%"`,
+          ),
+        },
+        {
+          description: Raw(
+            (alias) => `REPLACE(${alias}, " ", "") LIKE "%${spacelessSearch}%"`,
+          ),
+        },
+      ],
+    });
   }
 
   async findOne(id: number) {
@@ -29,6 +48,6 @@ export class ProjectsService {
   }
 
   async remove(id: number) {
-    return this.projectsRepository.delete(id);
+    return this.projectsRepository.softDelete(id);
   }
 }
