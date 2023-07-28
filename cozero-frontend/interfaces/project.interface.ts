@@ -7,6 +7,7 @@ export interface Project {
     listing: string[]
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string;
 }
 
 export interface ListItem {
@@ -34,3 +35,9 @@ export interface DeleteProjectResult {
 }
 
 export type UpdateProjectResult = DeleteProjectResult;
+
+export interface ProjectApiError {
+    statusCode: number;
+    message: string[];
+    error: string;
+}

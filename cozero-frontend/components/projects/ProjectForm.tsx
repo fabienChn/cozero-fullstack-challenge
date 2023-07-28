@@ -4,7 +4,7 @@ import { BsFillTrashFill } from "react-icons/bs"
 import { TbLeaf } from "react-icons/tb"
 import { useForm, useFieldArray } from "react-hook-form";
 import { CreateProjectDto, ProjectForm as IProjectForm, Project, UpdateProjectDto } from "../../interfaces/project.interface";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useContext, useEffect, useState } from "react";
 import { createProjectDefaultValues } from "../../constants/project.constants";
 import ProjectsService from "../../services/ProjectsService";
 import { translate } from "../../utils/language.utils";
@@ -16,6 +16,7 @@ import { AuthContext } from "../../context/auth";
 export default function ProjectForm() {
     const { id } = useParams()
     const [listItem, setListItem] = useState<string>("");
+    const [isMissingListing, setIsMissingListing] = useState<boolean>(false);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const toast = useToast()
     const navigate = useNavigate()
@@ -71,6 +72,12 @@ export default function ProjectForm() {
     }
 
     const onSubmitForm = async (projectForm: IProjectForm) => {
+        if (!projectForm.listing.length) {
+            setIsMissingListing(true);
+            
+            return;
+        }
+
         setIsProcessing(true);
 
         const project: CreateProjectDto | UpdateProjectDto = projectFormToProjectDTO(projectForm, context?.user?.email as string)
@@ -78,20 +85,28 @@ export default function ProjectForm() {
         const projectResponse = id ? await ProjectsService.updateProject(project as UpdateProjectDto) : await ProjectsService.createProject(project as CreateProjectDto);
         setIsProcessing(false);
 
-        const { title, description } = getProjectResponseTranslation(!!projectResponse, !!id);
+        const { title, description } = getProjectResponseTranslation(projectResponse, !!id);
+
+        const requestSucceeded = projectResponse && !('error' in projectResponse);
 
         toast({
             title,
             description,
-            status: projectResponse ? 'success' : 'error',
+            status: requestSucceeded ? 'success' : 'error',
             duration: 9000,
             isClosable: true,
         })
 
-        if (projectResponse) {
+        if (requestSucceeded) {
             navigate("/projects")
         }
     }
+
+    const handleListingProposalsChange = ({ target }: ChangeEvent<HTMLInputElement>) => {
+        setListItem(target.value);
+
+        setIsMissingListing(false);
+    };
 
     const { co2EstimateReduction: { min, max }, listing, name } = watch()
 
@@ -133,12 +148,12 @@ export default function ProjectForm() {
                         {translate('CO2E_CALCULATION_C2A')}
                     </FormHelperText>
                 </FormControl>
-                <FormControl>
+                <FormControl isInvalid={isMissingListing}>
                     <FormLabel>{translate('LISTING_PROPOSALS')}</FormLabel>
                     <Input type='text'
                         id='listing-proposal-input'
                         value={listItem}
-                        onChange={(e) => setListItem(e.target.value)}
+                        onChange={handleListingProposalsChange}
                         onKeyDown={onKeyDown}
                     />
                     <FormHelperText>{translate('ADD_PROPOSAL_ENTER')}</FormHelperText>

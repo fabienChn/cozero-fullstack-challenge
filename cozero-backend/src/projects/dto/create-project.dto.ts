@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsArray, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsArray,
+  IsString,
+  ArrayNotEmpty,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class CreateProjectDto {
   @IsNotEmpty()
@@ -19,5 +25,8 @@ export class CreateProjectDto {
 
   @IsNotEmpty()
   @IsArray()
+  @ArrayNotEmpty()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
   listing: string[];
 }

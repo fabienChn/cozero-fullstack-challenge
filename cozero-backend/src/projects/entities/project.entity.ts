@@ -37,5 +37,5 @@ export class Project {
   updatedAt: string;
 
   @DeleteDateColumn()
-  public deletedAt: Date;
+  deletedAt: Date;
 }

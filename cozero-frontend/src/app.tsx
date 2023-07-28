@@ -28,6 +28,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/projects" element={<ProjectsList />} />
+              <Route path="/deleted-projects" element={<ProjectsList showDeleted />} />
               <Route path='/sign-up' element={<LoginPage isSignUp={true} />} />
               <Route path='/sign-in' element={<LoginPage isSignUp={false} />} />
               <Route path='/projects/create' element={<CreateProjectPage />} />

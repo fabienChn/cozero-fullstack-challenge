@@ -29,8 +29,11 @@ export class ProjectsController {
   @SkipAuth()
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(@Query('searchQuery') searchQuery?: string) {
-    return this.projectsService.findAll(searchQuery);
+  findAll(
+    @Query('searchQuery') searchQuery?: string,
+    @Query('showDeleted') showDeleted?: boolean,
+  ) {
+    return this.projectsService.findAll(searchQuery, showDeleted);
   }
 
   @SkipAuth()

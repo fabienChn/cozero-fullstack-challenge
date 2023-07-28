@@ -6,6 +6,7 @@ export default function Menu() {
         <Flex gap={10}>
             <MenuItem href="/" title="Home" />
             <MenuItem href="/projects" title="Projects" />
+            <MenuItem href="/deleted-projects" title="Deleted Projects" />
         </Flex>
     )
 }

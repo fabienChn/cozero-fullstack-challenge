@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Raw, Repository } from 'typeorm';
+import { IsNull, Not, Raw, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
@@ -16,27 +16,24 @@ export class ProjectsService {
     return await this.projectsRepository.save(createProjectDto);
   }
 
-  async findAll(searchQuery?: string): Promise<Project[]> {
-    if (!searchQuery) {
-      return this.projectsRepository.find();
+  async findAll(searchQuery?: string, showDeleted = false): Promise<Project[]> {
+    let queryBuilder = this.projectsRepository.createQueryBuilder('p');
+
+    if (showDeleted) {
+      queryBuilder = queryBuilder
+        .withDeleted()
+        .where('p.deletedAt IS NOT NULL');
     }
 
-    const spacelessSearch = searchQuery.replace(' ', '');
+    if (searchQuery && searchQuery.length > 0) {
+      const spacelessSearch = searchQuery.replace(' ', '');
 
-    return this.projectsRepository.find({
-      where: [
-        {
-          name: Raw(
-            (alias) => `REPLACE(${alias}, " ", "") LIKE "%${spacelessSearch}%"`,
-          ),
-        },
-        {
-          description: Raw(
-            (alias) => `REPLACE(${alias}, " ", "") LIKE "%${spacelessSearch}%"`,
-          ),
-        },
-      ],
-    });
+      queryBuilder = queryBuilder.andWhere(
+        `REPLACE(p.name, " ", "") LIKE "%${spacelessSearch}%" OR REPLACE(p.description, " ", "") LIKE "%${spacelessSearch}%"`,
+      );
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number) {

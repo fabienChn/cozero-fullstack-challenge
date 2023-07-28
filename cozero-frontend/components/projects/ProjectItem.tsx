@@ -2,9 +2,9 @@ import { Avatar, Box, Button, chakra, Flex, Stack, Text } from "@chakra-ui/react
 import { Project } from "../../interfaces/project.interface"
 import { FaLeaf } from "react-icons/fa"
 import { MdModeEditOutline } from "react-icons/md"
-import { BsFillTrashFill } from "react-icons/bs"
+import { BsFillTrashFill, BsReplyFill } from "react-icons/bs"
 import TimeAgo from 'react-timeago'
-import DeleteProjectConfirmation from "../DeleteProjectConfirmation"
+import ActionOnProjectConfirmation from "../ActionOnProjectConfirmation"
 import { useContext, useState } from "react"
 import { translate } from "../../utils/language.utils"
 import { useNavigate } from "react-router"
@@ -12,22 +12,30 @@ import { AuthContext } from "../../context/auth"
 
 interface Props {
     project: Project
-    onDelete: (projectId: string) => void
+    onDelete?: (projectId: string) => void
+    onRestore?: (projectId: string) => void
 }
 
 const LeafIcon = chakra(FaLeaf)
 const TimeAgeComponent = chakra(TimeAgo)
 
-export default function ProjectItem({ project, onDelete }: Props) {
-    const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false)
+export default function ProjectItem({ project, onDelete, onRestore }: Props) {
+    const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
     const navigate = useNavigate()
     const { context } = useContext(AuthContext)
     const userEmail = context?.user?.email
 
     const onDeleteAction = () => {
-        setIsDeleteConfirmationOpen(false)
-        onDelete(project.id)
+        setIsConfirmationOpen(false)
+        onDelete?.(project.id)
     }
+    
+    const onRestoreAction = () => {
+        setIsConfirmationOpen(false)
+        onRestore?.(project.id)
+    }
+
+    const handleDialogClose = () => setIsConfirmationOpen(false)
 
     return (
         <Box
@@ -46,7 +54,11 @@ export default function ProjectItem({ project, onDelete }: Props) {
                     {userEmail === project.owner && (
                         <Flex gap={3}>
                             <MdModeEditOutline cursor='pointer' onClick={() => navigate(`/projects/${project.id}/edit`)} />
-                            <BsFillTrashFill cursor='pointer' onClick={() => setIsDeleteConfirmationOpen(true)} />
+                            {project.deletedAt ? (
+                                <BsReplyFill cursor='pointer' title='Restore Project' onClick={() => setIsConfirmationOpen(true)} />
+                            ): (
+                                <BsFillTrashFill cursor='pointer' onClick={() => setIsConfirmationOpen(true)} />
+                            )}
                         </Flex>
                     )}
                 </Flex>
@@ -70,10 +82,11 @@ export default function ProjectItem({ project, onDelete }: Props) {
                     </Flex>
                 </Flex>
             </Stack>
-            <DeleteProjectConfirmation
-                isOpen={isDeleteConfirmationOpen}
-                onClose={() => setIsDeleteConfirmationOpen(false)}
-                onDelete={onDeleteAction}
+            <ActionOnProjectConfirmation
+                isOpen={isConfirmationOpen}
+                actionType={project.deletedAt ? 'restore' : 'delete'}
+                onClose={handleDialogClose}
+                onExectuteAction={project.deletedAt ? onRestoreAction : onDeleteAction}
             />
         </Box>
     )

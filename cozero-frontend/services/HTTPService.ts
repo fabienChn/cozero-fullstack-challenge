@@ -44,6 +44,18 @@ class HTTPService {
         return response.json();
     }
 
+    public async patch<T>(path: string, data: any, jwtToken?: string): Promise<T> {
+        const response = await fetch(`${BACKEND_URL}/${path}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': jwtToken ? `Bearer ${jwtToken}` : '',
+            },
+            body: JSON.stringify(data),
+        });
+        return response.json();
+    }
+
     public async delete<T>(path: string, jwtToken?: string): Promise<T> {
         const response = await fetch(`${BACKEND_URL}/${path}`, {
             method: 'DELETE',

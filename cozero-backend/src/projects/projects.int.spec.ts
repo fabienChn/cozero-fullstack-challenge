@@ -89,6 +89,23 @@ describe('ProjectsController', () => {
     });
   });
 
+  describe('when the showDelete query parameter is true', () => {
+    it('returns soft deleted projects only', async () => {
+      const [firstProject] = await projectRepository.find();
+
+      projectRepository.softDelete(firstProject.id);
+
+      return supertest(app.getHttpServer())
+        .get('/projects')
+        .query({ showDeleted: true })
+        .expect(200)
+        .then((res) => {
+          expect(res.body.length).toBe(1);
+          expect(res.body[0].id).toBe(firstProject.id);
+        });
+    });
+  });
+
   describe('create', () => {
     it('creates a project', () => {
       return supertest(app.getHttpServer())
@@ -113,6 +130,7 @@ describe('ProjectsController', () => {
             description: 'A different description',
             owner: 'John Doe',
             co2EstimateReduction: [100, 200],
+            listing: [],
           })
           .expect(400);
       });

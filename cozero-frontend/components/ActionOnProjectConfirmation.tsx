@@ -4,12 +4,16 @@ import { translate } from "../utils/language.utils"
 
 interface Props {
     isOpen: boolean
+    actionType: 'delete' | 'restore';
     onClose: () => void
-    onDelete: () => void
+    onExectuteAction: () => void
 }
 
-export default function DeleteProjectConfirmation({ isOpen, onClose, onDelete }: Props) {
+export default function ActionOnProjectConfirmation({ isOpen, actionType, onClose, onExectuteAction }: Props) {
     const cancelRef = React.useRef(null)
+
+    const headerText = translate(actionType === 'restore' ? 'RESTORE_PROJECT' : 'DELETE_PROJECT');
+    const bodyText = translate(actionType === 'restore' ? 'RESTORE_PROJECT_DESCRIPTION' : 'DELETE_PROJECT_DESCRIPTION');
 
     return (
         <>
@@ -23,16 +27,16 @@ export default function DeleteProjectConfirmation({ isOpen, onClose, onDelete }:
                 <AlertDialogOverlay />
 
                 <AlertDialogContent>
-                    <AlertDialogHeader>{translate('DELETE_PROJECT')}</AlertDialogHeader>
+                    <AlertDialogHeader>{headerText}</AlertDialogHeader>
                     <AlertDialogCloseButton />
                     <AlertDialogBody>
-                        {translate('DELETE_PROJECT_DESCRIPTION')}
+                        {bodyText}
                     </AlertDialogBody>
                     <AlertDialogFooter>
                         <Button ref={cancelRef} onClick={onClose}>
                             {translate('NO')}
                         </Button>
-                        <Button colorScheme='red' ml={3} onClick={onDelete}>
+                        <Button colorScheme='red' ml={3} onClick={onExectuteAction}>
                             {translate('YES')}
                         </Button>
                     </AlertDialogFooter>

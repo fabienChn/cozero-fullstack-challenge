@@ -1,8 +1,8 @@
 import { CreateProjectDto, ProjectForm, UpdateProjectDto } from "../interfaces/project.interface";
 import { translate } from "./language.utils";
 
-export const getProjectResponseTranslation = (isSuccess: boolean, isUpdate: boolean) => {
-    if (isSuccess) {
+export const getProjectResponseTranslation = (response: any, isUpdate: boolean) => {
+    if (!!response && !response.error) {
         return {
             title: translate(isUpdate ? 'PROJECT_UPDATED' : 'PROJECT_CREATED'),
             description: translate(isUpdate ? 'PROJECT_UPDATED_DESCRIPTION' : 'PROJECT_CREATED_DESCRIPTION')
